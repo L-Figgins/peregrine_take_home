@@ -86,15 +86,10 @@ def run(
         key, values = prop.split(":")
         prop_dict[key] = values.split(",")
 
-    print(prop_dict)
-
     # Filter data by models and properties
     filtered = filter_data(normalized, models, prop_dict)
 
     agg = aggregate_data(filtered)
-
-    print(agg)
-
     return agg
 
 
