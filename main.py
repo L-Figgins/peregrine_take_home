@@ -2,7 +2,8 @@ import argparse
 import json
 import pprint
 from collections import defaultdict
-from typing import Dict, List, Tuple
+from typing import Dict, List, Tuple, Any, Union, Literal
+
 
 Aggregation = Tuple[str, int]
 TypeStr = Literal["string", "integer", "boolean"]
