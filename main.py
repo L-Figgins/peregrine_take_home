@@ -56,20 +56,57 @@ def _flatten_data(data: List[dict]) -> List[dict]:
     return table
 
 
-def filter_data(data, models: list, properties: dict):
-    filtered_data = []
-    for entity in data:
-        # Filter by model
-        if not models or entity.get("model") in models:
-            # Filter by properties
-            include = True
-            for key, values in properties.items():
-                if not str(entity["properties"].get(key)) in values:
-                    include = False
-                    break
-            if include:
-                filtered_data.append(entity)
+def _filter_data(
+    data: List[dict], models: List[str], properties: dict
+) -> List[Dict[str, Any]]:
+    """
+    Filter the data based on specified models and properties.
+
+    :param data: list of data entities to biltered
+    :param models: The list of models to match against.
+    :param properties: The properties to match against.
+
+    :return: The filtered data, containing dictionaries of entities that match the specified
+    models and properties.
+
+    """
+    filtered_data = [
+        entity
+        for entity in data
+        if _match_model(entity, models) and _match_properties(entity, properties)
+    ]
+
     return filtered_data
+
+
+def _match_model(entity: Dict[str, Any], models: List[str]) -> bool:
+    """
+    Checks if data entity matches model
+
+    :param entity: data entity
+    :param models: models to match (Union)
+
+    :return: returns true if entity matches any of the models provided
+    """
+    return not models or entity.get("model") in models
+
+
+def _match_properties(entity: Dict[str, Any], properties: Dict[str, List[str]]) -> bool:
+    """
+    Check if the entity matches the specified properties. Multiple key/value paris are treated
+    as AND (intersection)
+
+    :param entity: data entity
+    :param properties: properties dictionary containing the key value pairs
+
+    :return: True if matched
+    """
+    for key, values in properties.items():
+        if str(entity["properties"].get(key)) not in values:
+            return False
+    return True
+
+
 
 
 def aggregate_data(data: List[dict]):
