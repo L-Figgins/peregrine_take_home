@@ -9,9 +9,26 @@ TypeStr = Literal["string", "integer", "boolean"]
 ValueType = Union[int, str, bool, None]
 
 
-def str_to_type(value, type_str):
-    type_dict = {"integer": int, "boolean": bool, "string": str}
+# private
+def _str_to_type(value: ValueType, type_str: TypeStr):
+    """
+    Converts a given value to a new type, as specified by a string input.
+    Supported type strings are "integer", "boolean", and "string".
 
+    :param value: the value to be converted
+    :param typ_str: A string indicating the type to which the value should be converted.
+
+    :return: The input value converted to the requested type. If the input value is None,
+             then None is returned without any conversion.
+
+    :raises KeyError: If the type_str is not one of the supported types.
+    :raises ValueError: If the value can't be converted to the desired type.
+
+    """
+    if value is None:
+        return value
+
+    type_dict = {"integer": int, "boolean": bool, "string": str}
     return type_dict[type_str](value)
 
 
