@@ -13,7 +13,14 @@ def str_to_type(value, type_str):
     return type_dict[type_str](value)
 
 
-def normalize_data(data: List[dict]):
+def _flatten_data(data: List[dict]) -> List[dict]:
+    """
+    Flattens entity properities
+
+    :param data: List of data entities
+    :return: List of data entites with flattened properties
+    """
+
     table = []
 
     for row in data:
