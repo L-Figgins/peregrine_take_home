@@ -44,13 +44,10 @@ def _flatten_data(data: List[dict]) -> List[dict]:
     table = []
 
     for row in data:
-        property_obj = {}
-        for prop in row["properties"]:
-            property_obj[prop["slug"]] = (
-                str_to_type(prop["value"], prop["type"])
-                if prop["value"] is not None
-                else None
-            )
+        property_obj = {
+            prop["slug"]: _str_to_type(prop["value"], prop["type"])
+            for prop in row["properties"]
+        }
         table.append({"model": row["model"], "properties": property_obj})
 
     return table
