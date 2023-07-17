@@ -198,7 +198,7 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
 
-    with open(args.input_file, "r") as f:
-        data = json.load(f)
+    with open(args.input_file, "r", encoding="utf-8") as f:
+        d = json.load(f)
 
-    pprint.pprint(run(data, args.models, args.properties))
+    pprint.pprint(run(d, args.models, args.properties))
