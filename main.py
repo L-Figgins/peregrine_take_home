@@ -42,7 +42,6 @@ def _flatten_data(data: List[dict]) -> List[dict]:
     """
 
     table = []
-
     for row in data:
         property_obj = {
             prop["slug"]: _str_to_type(prop["value"], prop["type"])
