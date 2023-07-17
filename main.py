@@ -104,24 +104,28 @@ def _match_properties(entity: Dict[str, Any], properties: Dict[str, List[str]]) 
     return True
 
 
+def _aggregate_data(data: List[dict]) -> Dict[str, Aggregation]:
+    """
+    Aggregates the data contained within the 'properties' key of each dictionary
+    in the provided list. The aggregation involves counting the occurrences
+    of each unique property and its corresponding value.
 
+    :param data: List of data entities
 
-def aggregate_data(data: List[dict]):
-    aggregate_data = defaultdict(lambda: defaultdict(int))
+    :return: Dictionary containing aggregated data. Lists are sorted
+    in descending order
+    """
+    aggregated_data = defaultdict(lambda: defaultdict(int))
 
     for row in data:
-        for k, v in row["properties"].items():
-            aggregate_data[k][v] += 1
+        for key, value in row.get("properties", {}).items():
+            aggregated_data[key][value] += 1
 
     # sort
-    sorted_data = {}
-
-    for k, value_counts in aggregate_data.items():
-        sorted_data[k] = sorted(
-            [(value, count) for value, count in value_counts.items()],
-            key=lambda x: x[1],
-            reverse=True,
-        )
+    sorted_data = {
+        key: sorted(list(value_counts.items()), key=lambda x: x[1], reverse=True)
+        for key, value_counts in aggregated_data.items()
+    }
 
     return sorted_data
 
