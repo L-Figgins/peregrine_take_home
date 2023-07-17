@@ -5,6 +5,8 @@ from collections import defaultdict
 from typing import Dict, List, Tuple
 
 Aggregation = Tuple[str, int]
+TypeStr = Literal["string", "integer", "boolean"]
+ValueType = Union[int, str, bool, None]
 
 
 def str_to_type(value, type_str):
