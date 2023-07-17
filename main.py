@@ -130,12 +130,13 @@ def _aggregate_data(data: List[dict]) -> Dict[str, Aggregation]:
     return sorted_data
 
 
+# public
 def run(
     data: List[dict], models: List[str], properties: List[str]
 ) -> Dict[str, List[Aggregation]]:
     """
-    Takes a list of entity objects, filters data matching the `models` and `properties` specifications,
-    and then aggregates the data returning a sorted list of aggregations.
+    Takes a list of entity objects, filters data matching the `models` and `properties`
+    specifications and then aggregates the data returning a sorted list of aggregations.
 
     :param data: The list entity data
     :param models: A list of models to filter the aggregation on
@@ -143,19 +144,18 @@ def run(
         key:value1,value2
     """
 
-    normalized = normalize_data(data)
+    flattened = _flatten_data(data)
     # Parse properties to a dictionary
     prop_dict = {}
-
     for prop in properties:
         key, values = prop.split(":")
         prop_dict[key] = values.split(",")
 
     # Filter data by models and properties
-    filtered = filter_data(normalized, models, prop_dict)
+    filtered = _filter_data(flattened, models, prop_dict)
 
-    agg = aggregate_data(filtered)
-    return agg
+    result = _aggregate_data(filtered)
+    return result
 
 
 if __name__ == "__main__":
