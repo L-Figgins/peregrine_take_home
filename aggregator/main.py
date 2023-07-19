@@ -42,27 +42,28 @@ def _str_to_type(value: ValueType, type_str: TypeStr):
     return type_dict[type_str](value)
 
 
-def _flatten_data(data: List[dict]) -> List[dict]:
+def _flatten_data(data: Iterator[dict]) -> Iterator[dict]:
     """
-    Flattens entity properities
+    Lazily flattens entity properities
 
     :param data: List of data entities
     :return: List of data entites with flattened properties
     """
 
-    table = []
-    for row in data:
+    def process(row):
         property_obj = {
             prop["slug"]: _str_to_type(prop["value"], prop["type"])
             for prop in row["properties"]
         }
-        table.append({"model": row["model"], "properties": property_obj})
+        return {"model": row["model"], "properties": property_obj}
 
-    return table
+    flattened = map(process, data)
+
+    return flattened
 
 
 def _filter_data(
-    data: List[dict], models: List[str], properties: dict
+    data: Iterator[dict], models: List[str], properties: dict
 ) -> List[Dict[str, Any]]:
     """
     Filter the data based on specified models and properties.
@@ -75,11 +76,12 @@ def _filter_data(
     models and properties.
 
     """
-    filtered_data = [
-        entity
-        for entity in data
-        if _match_model(entity, models) and _match_properties(entity, properties)
-    ]
+
+    filtered_data = filter(
+        lambda entity: _match_model(entity, models)
+        and _match_properties(entity, properties),
+        data,
+    )
 
     return filtered_data
 
@@ -112,7 +114,7 @@ def _match_properties(entity: Dict[str, Any], properties: Dict[str, List[str]]) 
     return True
 
 
-def _aggregate_data(data: List[dict]) -> Dict[str, Aggregation]:
+def _aggregate_data(data: Iterator[dict]) -> Dict[str, Aggregation]:
     """
     Aggregates the data contained within the 'properties' key of each dictionary
     in the provided list. The aggregation involves counting the occurrences
@@ -140,7 +142,7 @@ def _aggregate_data(data: List[dict]) -> Dict[str, Aggregation]:
 
 # public
 def run(
-    data: List[dict], models: List[str], properties: List[str]
+    data_gen: Iterator[dict], models: List[str], properties: List[str]
 ) -> Dict[str, List[Aggregation]]:
     """
     Takes a list of entity objects, filters data matching the `models` and `properties`
@@ -152,7 +154,6 @@ def run(
         key:value1,value2
     """
 
-    flattened = _flatten_data(data)
     # Parse properties to a dictionary
     prop_dict = {}
     for prop in properties:
@@ -160,6 +161,7 @@ def run(
         prop_dict[key] = values.split(",")
 
     # Filter data by models and properties
+    flattened = _flatten_data(data_gen)
     filtered = _filter_data(flattened, models, prop_dict)
 
     result = _aggregate_data(filtered)
