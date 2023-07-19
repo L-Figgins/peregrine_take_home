@@ -10,6 +10,15 @@ TypeStr = Literal["string", "integer", "boolean"]
 ValueType = Union[int, str, bool, None]
 
 
+def json_generator(filename, field="item"):
+    """
+    Yields json array data entities
+    """
+    with open(filename, "r", encoding="utf-8") as file:
+        for entity in ijson.items(file, field):
+            yield entity
+
+
 # private
 def _str_to_type(value: ValueType, type_str: TypeStr):
     """
