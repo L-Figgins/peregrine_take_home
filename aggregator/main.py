@@ -3,6 +3,7 @@ import ijson
 import pprint
 from collections import defaultdict
 from typing import Dict, List, Tuple, Any, Union, Literal, Iterator
+import tracemalloc
 
 
 Aggregation = Tuple[str, int]
@@ -207,7 +208,9 @@ if __name__ == "__main__":
         """,
     )
     args = parser.parse_args()
-
+    tracemalloc.start()
     d = json_generator(args.input_file)
-
     pprint.pprint(run(d, args.models, args.properties))
+    current, peak = tracemalloc.get_traced_memory()
+    print(f"current mem:{current/10**6}MB, peak:{peak/ 10**6}MB")
+    tracemalloc.stop()
