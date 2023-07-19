@@ -1,8 +1,8 @@
 import argparse
-import json
+import ijson
 import pprint
 from collections import defaultdict
-from typing import Dict, List, Tuple, Any, Union, Literal
+from typing import Dict, List, Tuple, Any, Union, Literal, Iterator
 
 
 Aggregation = Tuple[str, int]
