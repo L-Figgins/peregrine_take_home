@@ -1,13 +1,23 @@
 import argparse
-import json
+import ijson
 import pprint
 from collections import defaultdict
-from typing import Dict, List, Tuple, Any, Union, Literal
+from typing import Dict, List, Tuple, Any, Union, Literal, Iterator
+import tracemalloc
 
 
 Aggregation = Tuple[str, int]
 TypeStr = Literal["string", "integer", "boolean"]
 ValueType = Union[int, str, bool, None]
+
+
+def json_generator(filename, field="item"):
+    """
+    Yields json array data entities
+    """
+    with open(filename, "r", encoding="utf-8") as file:
+        for entity in ijson.items(file, field):
+            yield entity
 
 
 # private
@@ -33,27 +43,28 @@ def _str_to_type(value: ValueType, type_str: TypeStr):
     return type_dict[type_str](value)
 
 
-def _flatten_data(data: List[dict]) -> List[dict]:
+def _flatten_data(data: Iterator[dict]) -> Iterator[dict]:
     """
-    Flattens entity properities
+    Lazily flattens entity properities
 
     :param data: List of data entities
     :return: List of data entites with flattened properties
     """
 
-    table = []
-    for row in data:
+    def process(row):
         property_obj = {
             prop["slug"]: _str_to_type(prop["value"], prop["type"])
             for prop in row["properties"]
         }
-        table.append({"model": row["model"], "properties": property_obj})
+        return {"model": row["model"], "properties": property_obj}
 
-    return table
+    flattened = map(process, data)
+
+    return flattened
 
 
 def _filter_data(
-    data: List[dict], models: List[str], properties: dict
+    data: Iterator[dict], models: List[str], properties: dict
 ) -> List[Dict[str, Any]]:
     """
     Filter the data based on specified models and properties.
@@ -66,11 +77,12 @@ def _filter_data(
     models and properties.
 
     """
-    filtered_data = [
-        entity
-        for entity in data
-        if _match_model(entity, models) and _match_properties(entity, properties)
-    ]
+
+    filtered_data = filter(
+        lambda entity: _match_model(entity, models)
+        and _match_properties(entity, properties),
+        data,
+    )
 
     return filtered_data
 
@@ -103,7 +115,7 @@ def _match_properties(entity: Dict[str, Any], properties: Dict[str, List[str]]) 
     return True
 
 
-def _aggregate_data(data: List[dict]) -> Dict[str, Aggregation]:
+def _aggregate_data(data: Iterator[dict]) -> Dict[str, Aggregation]:
     """
     Aggregates the data contained within the 'properties' key of each dictionary
     in the provided list. The aggregation involves counting the occurrences
@@ -131,7 +143,7 @@ def _aggregate_data(data: List[dict]) -> Dict[str, Aggregation]:
 
 # public
 def run(
-    data: List[dict], models: List[str], properties: List[str]
+    data_gen: Iterator[dict], models: List[str], properties: List[str]
 ) -> Dict[str, List[Aggregation]]:
     """
     Takes a list of entity objects, filters data matching the `models` and `properties`
@@ -143,7 +155,6 @@ def run(
         key:value1,value2
     """
 
-    flattened = _flatten_data(data)
     # Parse properties to a dictionary
     prop_dict = {}
     for prop in properties:
@@ -151,6 +162,7 @@ def run(
         prop_dict[key] = values.split(",")
 
     # Filter data by models and properties
+    flattened = _flatten_data(data_gen)
     filtered = _filter_data(flattened, models, prop_dict)
 
     result = _aggregate_data(filtered)
@@ -196,8 +208,9 @@ if __name__ == "__main__":
         """,
     )
     args = parser.parse_args()
-
-    with open(args.input_file, "r", encoding="utf-8") as f:
-        d = json.load(f)
-
+    tracemalloc.start()
+    d = json_generator(args.input_file)
     pprint.pprint(run(d, args.models, args.properties))
+    current, peak = tracemalloc.get_traced_memory()
+    print(f"current mem:{current/10**6}MB, peak:{peak/ 10**6}MB")
+    tracemalloc.stop()
